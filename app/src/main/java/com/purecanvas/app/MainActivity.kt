@@ -28,7 +28,22 @@ import com.purecanvas.app.ui.EditorViewModel
 private val Ink=Color(0xFF24272D); private val Paper=Color(0xFFFAFAF8); private val Muted=Color(0xFF777B82); private val Accent=Color(0xFFB9A98E)
 class MainActivity:ComponentActivity(){ private val vm:EditorViewModel by viewModels()
  override fun onCreate(savedInstanceState:Bundle?){super.onCreate(savedInstanceState);window.statusBarColor=android.graphics.Color.rgb(250,250,248);window.navigationBarColor=android.graphics.Color.rgb(250,250,248);window.decorView.systemUiVisibility=android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
- setContent { MaterialTheme(colorScheme=lightColorScheme(primary=Ink,background=Paper,surface=Paper,secondary=Accent)){ val s by vm.state.collectAsStateWithLifecycle(); val picker=rememberLauncherForActivityResult(ActivityResultContracts.GetContent()){it?.let(vm::import)}; PureCanvasScreen(s, {picker.launch("image/*")},vm) } }
+ setContent { MaterialTheme(colorScheme=lightColorScheme(primary=Ink,background=Paper,surface=Paper,secondary=Accent)){ val s by vm.state.collectAsStateWithLifecycle(); val picker = rememberLauncherForActivityResult(
+    ActivityResultContracts.OpenDocument()
+) { uri ->
+    uri?.let {
+        try {
+            contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        } catch (_: SecurityException) {
+            // Continue with temporary access if persistence is unavailable.
+        }
+
+        vm.import(it)
+    }
+}; PureCanvasScreen(s, {picker.launch(arrayOf("image/jpeg", "image/png", "image/webp"))},vm) } }
  }
 }
 
