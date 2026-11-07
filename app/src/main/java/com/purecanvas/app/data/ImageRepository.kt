@@ -17,7 +17,8 @@ class ImageRepository(private val context: Context) {
     fun load(uri: Uri): Bitmap {
         val resolver=context.contentResolver
         val bounds=BitmapFactory.Options().apply { inJustDecodeBounds=true }
-        resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it,null,bounds) } ?: throw IOException("Unable to open image")
+        val boundsStream = resolver.openInputStream(uri) ?: throw IOException("Unable to open image")
+        boundsStream.use { BitmapFactory.decodeStream(it, null, bounds) }
         require(bounds.outWidth>0 && bounds.outHeight>0) { "Unsupported or invalid image" }
         val maxSide=5000
         var sample=1; while(bounds.outWidth/sample>maxSide || bounds.outHeight/sample>maxSide) sample*=2
